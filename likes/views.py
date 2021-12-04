@@ -6,6 +6,4 @@ from store.models import OrderItem, Product
 
 def hi(request):
 
-    print(Product)
-
     return HttpResponse('hi')
