@@ -1,8 +1,11 @@
 from django.db.models.aggregates import Count
 from django.contrib import admin, messages
+from django.contrib.contenttypes.admin import GenericTabularInline
 from django.db.models.query import QuerySet
 from django.utils.html import format_html, urlencode
 from django.urls import reverse
+
+from tags.models import TageedItem
 from . import models
 
 
@@ -20,6 +23,14 @@ class InventoryFilter(admin.SimpleListFilter):
             return queryset.filter(inventory__lt=10)
 
 
+class TagInline(GenericTabularInline):
+    autocomplete_fields = ['tag']
+    model = TageedItem
+    extra = 0
+    min_num = 1
+    max_num = 5
+
+
 @admin.register(models.Product)
 class ProductAdmin(admin.ModelAdmin):
     search_fields = ['title']
@@ -30,6 +41,7 @@ class ProductAdmin(admin.ModelAdmin):
     actions = ['clear_inventory']
     list_display = ['title', 'unit_price',
                     'inventory_status', 'collection_title']
+    inlines = [TagInline]
     list_editable = ['unit_price']
     list_filter = ['collection', 'last_update', InventoryFilter]
     list_per_page = 10
