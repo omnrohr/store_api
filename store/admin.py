@@ -25,9 +25,11 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(models.Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'customer']
+    list_display = ['id', 'customer', 'payment_status']
     list_per_page = 10
     list_select_related = ['customer']
+    search_fields = ['payment_status',
+                     'customer__first_name__istartswith', 'customer__last_name__istartswith']
 
     # def customer_name(self, order: models.Order):
     #     return order.customer.first_name + " " + order.customer.last_name
@@ -37,8 +39,9 @@ class OrderAdmin(admin.ModelAdmin):
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ['first_name', 'last_name', 'membership', 'customer_orders']
     list_editable = ['membership']
-    ordering = ['first_name', 'last_name']
     list_per_page = 10
+    ordering = ['first_name', 'last_name']
+    search_fields = ['first_name__istartswith', 'last_name__istartswith']
 
     @admin.display(ordering='customer_orders')
     def customer_orders(self, customer: models.Customer):
@@ -49,7 +52,7 @@ class CustomerAdmin(admin.ModelAdmin):
                 'customer__id': customer.id
             })
         )
-        return format_html('<a href="{}">{}</a>', url, customer.customer_orders)
+        return format_html('<a href="{}">{} Orders</a>', url, customer.customer_orders)
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
@@ -69,7 +72,7 @@ class CollectionAdmin(admin.ModelAdmin):
             + '?' + urlencode({
                 'collection__id': str(collection.id)
             }))
-        return format_html('<a href="{}">{}</a>', url, collection.products_count)
+        return format_html('<a href="{}">{} Products</a>', url, collection.products_count)
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
