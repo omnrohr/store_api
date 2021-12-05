@@ -25,4 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('__debug__/', include(debug_toolbar.urls)),
     path('likes/', include('likes.urls')),
+    path('store/', include('store.urls'))
 ]
