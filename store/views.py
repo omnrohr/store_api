@@ -3,27 +3,20 @@ from re import S
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from rest_framework import status
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Product, Collection
 from .serializers import CollectionSerializer, ProductSerializer
-from store import serializers
 
 
-class ProductList(APIView):
-    def get(self, request):
-        queryset = Product.objects.select_related('collection').all()
-        serializer = ProductSerializer(
-            queryset, many=True, context={'request': request})
-        return Response(serializer.data)
+class ProductList(ListCreateAPIView):
+    queryset = Product.objects.select_related('collection').all()
+    serializer_class = ProductSerializer
 
-    def post(self, request):
-        serializer = ProductSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        # print(serializer.validated_data) the data is in validated_data
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 
 class ProductDetail(APIView):
@@ -54,46 +47,11 @@ class ProductDetail(APIView):
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# @api_view(['GET', 'PATCH', 'PUT', 'DELETE'])
-# def product_detail(request, pk):
-#     product = get_object_or_404(Product, pk=pk)
-#     if request.method == 'GET':
-#         serializer = ProductSerializer(product, context={'request': request})
-#         return Response(serializer.data)
-#     elif request.method == 'PATCH':
-#         serializer = ProductSerializer(product, data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-#     elif request.method == 'PUT':
-#         serializer = ProductSerializer(product, data=request.data)
-#         serializer.is_valid(raise_exception=True)
 
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-#     elif request.method == 'DELETE':
-#         if product.orderitems.count() > 0:
-#             return Response({'error': 'Product cannot be deleted because it is associated with an order item.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-#         product.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class CollectionList(APIView):
-    def get(self, request):
-        queryset = Collection.objects.annotate(
-            products_count=Count('products')).all()
-        serializer = CollectionSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-        # serializer = CollectionSerializer(
-        #     queryset, many=True, context={'request': request})
-        # return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        serializer = CollectionSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+class CollectionList(ListCreateAPIView):
+    queryset = Collection.objects.annotate(
+        products_count=Count('products')).all()
+    serializer_class = CollectionSerializer
 
 
 @api_view(['GET', 'PATCH', 'DELETE', 'PUT'])
