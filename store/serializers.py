@@ -1,7 +1,7 @@
 from decimal import Decimal
 from rest_framework import fields, serializers
 from rest_framework.relations import StringRelatedField
-from .models import Product, Collection
+from .models import Product, Collection, Review
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -22,3 +22,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def calculate_tax(self, product):
         return product.unit_price * Decimal(1.16)
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id', 'date', 'name', 'description', 'product']
+
+    def create(self, validated_data):
+        product_id = self.context['product_id']
+        return Review.objects.create(product_id=product_id, **validated_data)
