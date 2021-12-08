@@ -1,13 +1,14 @@
 from django.db.models import Count
 from django.http import request
 from django_filters.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers, status
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin, DestroyModelMixin, UpdateModelMixin
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from .models import Customer, OrderItem, Product, Collection, Review, Cart, CartItem
 from .serializers import AddCartItemSerializer, CartItemSerializer, CollectionSerializer, CustomerSerializer, ProductSerializer, ReviewSerializer, CartSerializer, UpdataCartItemSerializer
 from .filters import ProductFilter
@@ -97,3 +98,17 @@ class CusermerViewSet(CreateModelMixin,
                       GenericViewSet):
     queryset = Customer.objects.select_related('user').all()
     serializer_class = CustomerSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['GET', 'PUT'])
+    def me(self, request):
+        customer, created = Customer.objects.get_or_create(
+            user_id=request.user.id)
+        if request.method == 'GET':
+            serializer = CustomerSerializer(customer)
+            return Response(serializer.data)
+        elif request.method == 'PUT':
+            serializer = CustomerSerializer(customer, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
