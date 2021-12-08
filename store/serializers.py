@@ -12,6 +12,12 @@ class CollectionSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+
+    def validate_product_id(self, value):
+        if not Product.objects.filter(pk=value).exists():
+            raise serializers.ValidationError('No product with the given id.')
+        return value
+
     class Meta:
         model = Product
         fields = ['id', 'title', 'description', 'slug', 'inventory', 'unit_price', 'price_with_tax',
@@ -24,6 +30,12 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class SimpleProductSerializer(serializers.ModelSerializer):
+
+    def validate_product_id(self, value):
+        if not Product.objects.filter(pk=value).exists():
+            raise serializers.ValidationError('No product with the given id.')
+        return value
+
     class Meta:
         model = Product
         fields = ['title', 'unit_price', 'price_with_tax']
@@ -72,7 +84,13 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class AddCartItemSerializer(serializers.ModelSerializer):
+
     product_id = serializers.IntegerField()
+
+    def validate_product_id(self, value):
+        if not Product.objects.filter(pk=value).exists():
+            raise serializers.ValidationError('No product with the given id.')
+        return value
 
     def save(self, **kwargs):
         product_id = self.validated_data.get('product_id')
@@ -83,13 +101,23 @@ class AddCartItemSerializer(serializers.ModelSerializer):
                 product_id=product_id, cart_id=cart_id)
             cart_item.quantity += quantity
             cart_item.save()
+            print('validated:', self.validated_data)
             self.instance = cart_item
+            print('instanse', self.instance.id)
         except CartItem.DoesNotExist:
             self.instance = CartItem.objects.create(
                 cart_id=cart_id, **self.validated_data)
 
+            print('instanse2', self.instance.id)
         return self.instance
 
     class Meta:
         model = CartItem
         fields = ['id', 'product_id', 'quantity']
+
+
+class UpdataCartItemSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CartItem
+        fields = ['quantity']
