@@ -9,7 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import OrderItem, Product, Collection, Review, Cart, CartItem
-from .serializers import AddCartItemSerializer, CartItemSerializer, CollectionSerializer, ProductSerializer, ReviewSerializer, CartSerializer
+from .serializers import AddCartItemSerializer, CartItemSerializer, CollectionSerializer, ProductSerializer, ReviewSerializer, CartSerializer, UpdataCartItemSerializer
 from .filters import ProductFilter
 from .pagination import DefaultPagination
 
@@ -31,6 +31,16 @@ class ProductViewSet(ModelViewSet):
             return Response({'error': 'Product cannot be deleted because it is associated with an order item.'},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().destroy(request, *args, **kwargs)
+        # for deleting itmes not an integer
+        # try:
+        #     int(kwargs['pk'])
+        #     if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+        #         return Response({'error': 'Product cannot be deleted because it is associated with an order item.'},
+        #                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        #     return super().destroy(request, *args, **kwargs)
+        # except:
+        #     return Response({'error': 'Not a valid input to delete'},
+        #                     status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CollectionViewSet(ModelViewSet):
@@ -65,9 +75,13 @@ class CartViewSet(CreateModelMixin,
 
 
 class CartItemViewSet(ModelViewSet):
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return AddCartItemSerializer
+        elif self.request.method == 'PATCH':
+            return UpdataCartItemSerializer
         return CartItemSerializer
 
     def get_serializer_context(self):
