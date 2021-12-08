@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-
+from datetime import timedelta
 from django import core
 from . import config
 
@@ -168,4 +168,9 @@ DJOSER = {
     'SERIALIZERS': {
         'user_create': 'core.serializers.UserCreateSerializer'
     }
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
